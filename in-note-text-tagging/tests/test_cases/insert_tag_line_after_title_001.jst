@@ -1,0 +1,11 @@
+const tagExtractor = new TagExtractor(true, '@');
+assertEquals(EXPECTS, (tagExtractor).insertTagLineAfterTitle(GIVEN, '@hello'))
+--- GIVEN ---
+# something something
+some text
+--- EXPECTS ---
+# something something
+
+@hello
+
+some text

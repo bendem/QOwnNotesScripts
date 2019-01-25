@@ -1,0 +1,42 @@
+const tagExtractor = new TagExtractor(true, '@');
+
+assertEquals('@test @whee', tagExtractor.findTagLine(GIVEN));
+assertEquals('@test @whee', tagExtractor.findTagLine(GIVEN.substring(0, GIVEN.length - 1))); // without \n
+assertEquals(null, tagExtractor.findTagLine(MISSING_TAG_MARKER_IN_TAG_LINE));
+assertEquals('@test @whee', tagExtractor.findTagLine(GIVEN_MULTI_TAG_LINE));
+assertEquals('@test @whee', tagExtractor.findTagLine(GIVEN_EQUAL_UNDERLINED_TITLE));
+assertEquals('@test @whee', tagExtractor.findTagLine(GIVEN_MANY_NEW_LINES_AFTER_TITLE));
+assertEquals(null, tagExtractor.findTagLine(GIVEN_LINK_IN_TAG_LINE));
+--- GIVEN ---
+# something something
+
+@test @whee
+--- MISSING_TAG_MARKER_IN_TAG_LINE ---
+# something something
+
+@test whee
+--- GIVEN_MULTI_TAG_LINE ---
+# something something
+
+@test @whee
+
+some  text, this is happening
+@arobase is the content of the note
+
+@something @something
+--- GIVEN_EQUAL_UNDERLINED_TITLE ---
+something something
+===
+
+@test @whee
+--- GIVEN_MANY_NEW_LINES_AFTER_TITLE ---
+# something something
+
+
+
+
+@test @whee
+--- GIVEN_LINK_IN_TAG_LINE ---
+# something something
+
+[something](@test/whee)

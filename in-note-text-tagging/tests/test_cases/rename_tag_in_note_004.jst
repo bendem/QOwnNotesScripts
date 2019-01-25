@@ -1,0 +1,9 @@
+const tagExtractor = new TagExtractor(true, '@');
+
+assertEquals(null, tagExtractor.renameTagInNote(GIVEN, '``', '('))
+--- GIVEN ---
+# something something
+
+@test @test2
+
+some text

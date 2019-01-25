@@ -1,6 +1,8 @@
 import QtQml 2.0
 import QOwnNotesTypes 1.0
 
+import './tag-extraction.js' as X;
+
 /**
  * This script handles tagging in a note for tags in the note text like:
  * @tag1 @tag2 @tag3
@@ -35,7 +37,7 @@ Script {
             "default": "purple",
         },
     ]
-    
+
     /**
      * Handles note tagging for a note
      *
@@ -49,132 +51,112 @@ Script {
      * @return string or string-list (if action = "list")
      */
     function noteTaggingHook(note, action, tagName, newTagName) {
-        var noteText = note.noteText;
-        var tagRegExp = RegExp("\\B%1(?=($|\\s|\\b)) ?".arg(escapeRegExp(tagMarker + tagName).replace(/ /g, "_")));
+        // FIXME Needs something to sanitize tags that have invalid characters (in 'add' and 'rename' mode, maybe 'remove' as well?)
+
+        const noteText = note.noteText;
+        const tagExtractor = new X.TagExtractor(putToBeginning, tagMarker);
 
         switch (action) {
             // adds the tag "tagName" to the note
             // the new note text has to be returned so that the note can be updated
             // returning an empty string indicates that nothing has to be changed
-            case "add":
-                // check if tag already exists
-                if (noteText.search(tagRegExp) > 0) {
-                    return "";
-                }
-                
-                const tag = tagMarker + tagName.replace(/ /g, "_");
-                
-                // add the tag to the beginning or to the end of the note
-                if (putToBeginning) {
-                    
-                    // make an array of up to 3 first lines and other text as last item
-                    var textLines = [];
-                    for (var lineCount = 0, lineStart = 0, lineEnd = 0; lineCount != 3; lineCount++) {
-                        lineEnd = noteText.indexOf("\n", lineStart + 1);
-
-                        if (lineEnd == -1)
-                            continue;
-
-                        textLines.push(noteText.substring(lineStart, lineEnd));
-                        lineStart = lineEnd;
+            case "add": {
+                const tagToAdd = tagMarker + tagName;
+                const bounds = tagExtractor.findTagLineBounds(noteText);
+                if (bounds === null) {
+                    if (putToBeginning) {
+                        return tagExtractor.insertTagLineAfterTitle(noteText, tagToAdd);
+                    } else {
+                        return noteText + '\n\n' + tagToAdd + '\n'
                     }
-
-                    textLines.push(noteText.substring(lineStart));
-                    
-                    // if line after headline is a line for tags add tag there, 
-                    // or make a new line for tags after headline
-                    function appendTag(text, tag, prepend) {
-                        if (text.substring(0, tagMarker.length) == tagMarker ||
-                            text.substring(1, tagMarker.length + 1) == tagMarker)
-                            return text + " " + tag;
-                        else
-                            return prepend + tag + "\n" + text;
-                    }
-                    
-                    // use different tag line number depending on a headline type
-                    if (textLines[0].substring(0, 1) == "#")
-                        textLines[1] = appendTag(textLines[1], tag, "\n");
-                    else if (textLines[1].search(/=+/) != -1)
-                        textLines[2] = appendTag(textLines[2], tag, "\n");
-                    else
-                        textLines[0] = appendTag(textLines[0], tag, "");
-                        
-                    noteText = textLines.join("");
                 }
 
-                else 
-                    noteText += "\n" + tag;
-                
-                return noteText;
+                const tagLine = tagExtractor.findTagLineFromBounds(bounds);
+                const tags = tagExtractor.tagLineToTags(tagLine);
+
+                if (tags.includes(tagToAdd)) {
+                    return '';
+                }
+
+                tags.push(tagToAdd);
+
+                return tagExtractor.replaceTextInBoundsWith(noteText, bounds, TagExtraction.tagsToTagLine(tags))
+            }
 
             // removes the tag "tagName" from the note
             // the new note text has to be returned so that the note can be updated
             // returning an empty string indicates that nothing has to be changed
-            case "remove":
-                return noteText.replace(tagRegExp, "");
+            case "remove": {
+                const newText = tagExtractor.removeTagInNote(noteText, tagName);
+                if (newText === null) {
+                    return '';
+                }
+                return newText;
+            }
 
             // renames the tag "tagName" in the note to "newTagName"
             // the new note text has to be returned so that the note can be updated
             // returning an empty string indicates that nothing has to be changed
-            case "rename":
-                return noteText.replace(tagRegExp, tagMarker + newTagName.replace(/ /g, "_"));
+            case "rename": {
+                const newText = tagExtractor.renameTagInNote(noteText, tagName, newTagName);
+                if (newText === null) {
+                    return '';
+                }
+                return newText;
+            }
 
             // returns a list of all tag names of the note
-            case "list":
-                var re = new RegExp("\\B%1([^\\s,;]+)".arg(escapeRegExp(tagMarker)), "gi"),
-                    result, tagNameList = [];
-
-                while ((result = re.exec(noteText)) !== null) {
-                    tagName = result[1].replace(/_/g, " ");
-                    
-                    // add the tag if it wasn't in the list
-                    if (tagNameList.indexOf(tagName) ==  -1) {
-                        tagNameList.push(tagName);
-                    }
+            case "list": {
+                const tagLine = tagExtractor.findTagLine(noteText);
+                if (tagLine === null) {
+                    return [];
                 }
-                return tagNameList;
+                console.log(tagExtractor.tagLineToTags(tagLine));
+                return tagExtractor.tagLineToTags(tagLine);
+            }
         }
-    
+
         return "";
     }
-    
+
+    // FIXME Does this need to be added back? Can we do it without parsing the whole thing with a regex?
     // Removes tag marker in note preview and highlights tag name with set color
     function noteToMarkdownHtmlHook(note, html) {
-        if (tagHighlightColor == "")
+        if (tagHighlightColor === "") {
             return;
-        
-        var re = new RegExp("\\B%1([^\\s,;]+)".arg(escapeRegExp(tagMarker)), "gi"), result;
+        }
 
-        while ((result = re.exec(html)) !== null)
-            html = html.replace(result[0], '<b><font color="%1">%2</font></b>'.arg(tagHighlightColor).arg(result[1]));
-            
-        return html;
-    }
-    
-    // Escapes a string for regular expressions
-    function escapeRegExp(str) {
-        return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+        const noteText = note.noteText;
+        const tagExtractor = new X.TagExtractor(putToBeginning, tagMarker);
+        const tagLine = tagExtractor.findTagLine(noteText);
+
+        return html.replace(`<p>${tagLine}</p>`, `<p style="color: ${tagHighlightColor};">${tagLine}</p>`);
     }
 
     /**
      * Hook to feed the autocompletion with tags if the current word starts with the tag marker
      */
     function autocompletionHook() {
+        //
+        // FIXME Autocompletion is kind of borked, it doesn't append the missing part of the word, but appends the whole word.
+        //       so if you type '@some' and autocomplete with 'something', you get '@somesomething'.
+        //
+
         // get the current word plus non-word-characters before the word to also get the tag marker
-        var word = script.noteTextEditCurrentWord(true);
+        const word = script.noteTextEditCurrentWord(true);
 
         if (!word.startsWith(tagMarker)) {
             return [];
         }
-        
+
         // cut the tag marker off of the string and do a substring search for tags
-        var tags = script.searchTagsByName(word.substr(tagMarker.length));
-        
-        // convert tag names with spaces to in-text tags with "_", "tag one" to @tag_one 
+        var tags = script.searchTagsByName(word.substring(tagMarker.length));
+
+        // convert tag names with spaces to in-text tags with "_", "tag one" to @tag_one
         for (var i = 0; i < tags.length; i++) {
             tags[i] = tags[i].replace(/ /g, "_");
         }
-        
+
         return tags;
     }
 }

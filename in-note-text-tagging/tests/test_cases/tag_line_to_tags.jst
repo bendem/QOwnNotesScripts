@@ -1,0 +1,5 @@
+const tagExtractor = new TagExtractor(true, '@');
+
+assertArrayEquals(['test', 'whee'], tagExtractor.tagLineToTags('@test @whee'));
+assertArrayEquals(['test', 'whee'], tagExtractor.tagLineToTags('@test    @whee '));
+assertArrayEquals(['test@whee'], tagExtractor.tagLineToTags('@test@whee'));

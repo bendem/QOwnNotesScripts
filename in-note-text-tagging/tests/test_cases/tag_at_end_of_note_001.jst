@@ -1,0 +1,55 @@
+const tagExtractor = new TagExtractor(false, '@');
+
+assertEquals('@test @whee', tagExtractor.findTagLine(GIVEN_EMPTY_NOTE));
+assertEquals('@test @whee', tagExtractor.findTagLine(GIVEN_EMPTY_NOTE.substring(0, GIVEN_EMPTY_NOTE.length - 1)));
+assertEquals(null, tagExtractor.findTagLine(GIVEN_INVALID_TAG_LINE, false, '@'));
+assertEquals('@something @something', tagExtractor.findTagLine(GIVEN_NOTE_WITH_MULTIPLE_TAG_LINES, false, '@'));
+assertEquals('@test @whee', tagExtractor.findTagLine(GIVEN_NOTE_WITH_EQUALS_TITLE, false, '@'));
+assertEquals('@test @whee', tagExtractor.findTagLine(GIVEN_EMPTY_NOTE_WITH_BLANK_LINES, false, '@'));
+
+assertEquals('@test @whee', tagExtractor.findTagLine(GIVEN_EMPTY_NOTE_WITH_BLANK_LINES_AFTER, false, '@'));
+
+assertEquals(null, tagExtractor.findTagLine(GIVEN_NOTE_WITH_LINK_TAG_LINE, false, '@'));
+--- GIVEN_EMPTY_NOTE ---
+# something something
+
+@test @whee
+--- GIVEN_INVALID_TAG_LINE ---
+# something something
+
+@test whee
+--- GIVEN_NOTE_WITH_MULTIPLE_TAG_LINES ---
+# something something
+
+@test @whee
+
+some  text, this is happening
+@arobase is the content of the note
+
+@something @something
+--- GIVEN_NOTE_WITH_EQUALS_TITLE ---
+something something
+===
+
+@test @whee
+--- GIVEN_EMPTY_NOTE_WITH_BLANK_LINES ---
+# something something
+
+
+
+
+@test @whee
+--- GIVEN_EMPTY_NOTE_WITH_BLANK_LINES_AFTER ---
+# something something
+
+
+
+
+@test @whee
+
+
+
+--- GIVEN_NOTE_WITH_LINK_TAG_LINE ---
+# something something
+
+[something](@test/whee)

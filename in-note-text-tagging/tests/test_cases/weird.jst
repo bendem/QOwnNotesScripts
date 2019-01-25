@@ -1,0 +1,12 @@
+const tagExtractor = new TagExtractor(true, '@');
+
+assertArrayEquals(['Notebooks/project-ideas'], tagExtractor.tagLineToTags(tagExtractor.findTagLine(GIVEN)));
+--- GIVEN ---
+Console calendar
+================
+
+@Notebooks/project-ideas
+
+
+
+https://zachholman.com/talk/utc-is-enough-for-everyone-right

@@ -1,0 +1,21 @@
+const tagExtractor = new TagExtractor(true, '@');
+
+assertEquals(EXPECTS, tagExtractor.removeTagInNote(GIVEN, 'test2'))
+--- GIVEN ---
+# something something
+
+@test @test2 @whee
+@test @test2 @whee
+@test @test2 @whee
+@test @test2 @whee
+
+some text
+--- EXPECTS ---
+# something something
+
+@test @whee
+@test @test2 @whee
+@test @test2 @whee
+@test @test2 @whee
+
+some text
