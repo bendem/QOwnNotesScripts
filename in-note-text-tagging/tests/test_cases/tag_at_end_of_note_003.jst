@@ -1,0 +1,12 @@
+const tagExtractor = new TagExtractor(false, '@');
+
+assertEquals('@something @something', tagExtractor.findTagLine(GIVEN_NOTE_WITH_MULTIPLE_TAG_LINES, false, '@'));
+--- GIVEN_NOTE_WITH_MULTIPLE_TAG_LINES ---
+# something something
+
+@test @whee
+
+some  text, this is happening
+@arobase is the content of the note
+
+@something @something

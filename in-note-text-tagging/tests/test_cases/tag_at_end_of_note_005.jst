@@ -1,0 +1,10 @@
+const tagExtractor = new TagExtractor(false, '@');
+
+assertEquals('@test @whee', tagExtractor.findTagLine(GIVEN_EMPTY_NOTE_WITH_BLANK_LINES, false, '@'));
+--- GIVEN_EMPTY_NOTE_WITH_BLANK_LINES ---
+# something something
+
+
+
+
+@test @whee

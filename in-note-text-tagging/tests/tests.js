@@ -3,6 +3,7 @@
 const TagExtractor = require('../tag-extraction.js');
 const fs = require('fs');
 const vm = require('vm');
+const path = require('path');
 const debug = process.argv.includes('--debug');
 
 function makeAssertionFunctions(errors) {
@@ -79,12 +80,20 @@ ${variableDeclarations}
 ${script}
 `;
 
+    let newLines = variableDeclarations.match(/\n/g);
+    let lineOffset = 0;
+    if (newLines) {
+        lineOffset = -newLines.length - 3
+    }
     if (debug) {
         console.debug(`=== ${testName} ===`);
         console.debug(s);
-        console.debug('========')
+        console.debug('========', lineOffset, '========');
     }
-    let eval = new vm.Script(s, { filename: filename });
+    let eval = new vm.Script(s, {
+        filename: filename,
+        lineOffset: lineOffset,
+    });
 
     const errors = [];
     eval.runInNewContext({
@@ -151,4 +160,4 @@ function printTestErrors(testName, errors) {
     }
 }
 
-executeTests('./test_cases');
+executeTests(path.resolve('./test_cases'));

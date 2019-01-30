@@ -22,6 +22,18 @@ TagExtractor.prototype.findTagLineBounds = function(noteText) {
         }
     }
 
+    function validateLineOnlyHasTags(noteText, start, end) {
+        // validate that we didn't actually get a line of text that starts with the tagMarker
+        for (let i = start + 1; i < end; ++i) {
+            if (whiteSpaceChars.includes(noteText[i - 1])
+                    && !whiteSpaceChars.includes(noteText[i])
+                    && noteText[i] !== self.tagMarker) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     let start = null;
     if (this.tagAtBegginingOfNote) {
         // look for a line of tags between the title and the content of the note
@@ -47,6 +59,11 @@ TagExtractor.prototype.findTagLineBounds = function(noteText) {
             // no newline at eof
             end = noteLength;
         }
+
+        if (!validateLineOnlyHasTags(noteText, start, end)) {
+            return null;
+        }
+
         return {
             start,
             end,
@@ -84,6 +101,10 @@ TagExtractor.prototype.findTagLineBounds = function(noteText) {
             }
         }
 
+        if (!validateLineOnlyHasTags(noteText, start, end)) {
+            return null;
+        }
+
         return {
             start, end,
         };
@@ -108,6 +129,9 @@ TagExtractor.prototype.renameTagInNote = function(noteText, oldTag, newTag) {
 
 TagExtractor.prototype.removeTagInNote = function(noteText, tagName) {
     const bounds = this.findTagLineBounds(noteText);
+    if (bounds === null) {
+        return null;
+    }
     const tagLine = this.findTagLineFromBounds(noteText, bounds);
     const tags = this.tagLineToTags(tagLine);
     const index = tags.indexOf(tagName);

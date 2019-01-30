@@ -1,0 +1,8 @@
+const tagExtractor = new TagExtractor(false, '@');
+
+assertEquals('@test @whee', tagExtractor.findTagLine(GIVEN_NOTE_WITH_EQUALS_TITLE, false, '@'));
+--- GIVEN_NOTE_WITH_EQUALS_TITLE ---
+something something
+===
+
+@test @whee

@@ -1,0 +1,7 @@
+const tagExtractor = new TagExtractor(false, '@');
+
+assertEquals(null, tagExtractor.findTagLine(GIVEN_INVALID_TAG_LINE, false, '@'));
+--- GIVEN_INVALID_TAG_LINE ---
+# something something
+
+@test whee

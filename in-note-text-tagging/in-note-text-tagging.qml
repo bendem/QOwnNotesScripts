@@ -119,8 +119,6 @@ Script {
         return "";
     }
 
-    // FIXME Does this need to be added back? Can we do it without parsing the whole thing with a regex?
-    // Removes tag marker in note preview and highlights tag name with set color
     function noteToMarkdownHtmlHook(note, html) {
         if (tagHighlightColor === "") {
             return;
@@ -137,11 +135,6 @@ Script {
      * Hook to feed the autocompletion with tags if the current word starts with the tag marker
      */
     function autocompletionHook() {
-        //
-        // FIXME Autocompletion is kind of borked, it doesn't append the missing part of the word, but appends the whole word.
-        //       so if you type '@some' and autocomplete with 'something', you get '@somesomething'.
-        //
-
         // get the current word plus non-word-characters before the word to also get the tag marker
         const word = script.noteTextEditCurrentWord(true);
 
@@ -150,10 +143,10 @@ Script {
         }
 
         // cut the tag marker off of the string and do a substring search for tags
-        var tags = script.searchTagsByName(word.substring(tagMarker.length));
+        const tags = script.searchTagsByName(word.substring(tagMarker.length));
 
         // convert tag names with spaces to in-text tags with "_", "tag one" to @tag_one
-        for (var i = 0; i < tags.length; i++) {
+        for (let i = 0; i < tags.length; ++i) {
             tags[i] = tags[i].replace(/ /g, "_");
         }
 

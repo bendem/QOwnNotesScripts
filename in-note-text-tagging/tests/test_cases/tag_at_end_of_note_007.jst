@@ -1,0 +1,7 @@
+const tagExtractor = new TagExtractor(false, '@');
+
+assertEquals(null, tagExtractor.findTagLine(GIVEN_NOTE_WITH_LINK_TAG_LINE, false, '@'));
+--- GIVEN_NOTE_WITH_LINK_TAG_LINE ---
+# something something
+
+[something](@test/whee)
